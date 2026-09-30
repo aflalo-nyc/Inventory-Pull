@@ -19,7 +19,18 @@ It has no AI in it. It is a fixed sequence that runs every few minutes.
     .venv/bin/python -m aflalo_pulls.worker --once --live    # one pass, moving inventory
     .venv/bin/pytest -q
 
-Deploy = run `--once --live` on a 5-minute schedule (a cron job; it exits in ~30s).
+## Deploy (Railway)
+
+`railway.json` already declares the whole deploy: a **cron service** that runs
+`python -m aflalo_pulls.worker --once --live` every 5 minutes and exits. Nothing listens on
+a port; nothing runs between passes.
+
+1. Railway → New Project → Deploy from GitHub → this repo. Railway reads `railway.json`.
+2. Service → Variables → add the five values from `.env.example` (Railway injects them as
+   the environment; there is no `.env` on the server).
+3. Deploy. Check the first run's log for `inventory synced: N items`.
+
+Cost: a run is ~30 seconds every 5 minutes, so a few dollars a month at most.
 
 ## Docs
 
