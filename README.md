@@ -39,6 +39,8 @@ Cost: one small always-on service, a few dollars a month.
 
 ## Docs
 
+- `docs/PORTAL.html` — the project page (what it is, the workflow, the forms, the tech, handoff).
+  Also published for the team at https://claude.ai/artifact/UMP36SzgyUwPCegEXcKFNp
 - `docs/DECISIONS.md` — every design decision and its reason, including the 2026-09-14
   redesign (multi-item pulls, return form, open/closed/overdue, grouped emails).
 - `docs/SCOPING.md` — the Shopify API feasibility check, with evidence.

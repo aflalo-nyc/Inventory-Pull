@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- Source of the project page published at https://claude.ai/artifact/UMP36SzgyUwPCegEXcKFNp
+     Open this file in a browser to read it. Keep the two in sync; the artifact is the shared copy. -->
+<title>AFLALO Pull Portal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (720px), small-caps section labels, a sticky in-page nav, cards only for the handoff block and the status strip. */
+:root{
+  --ground:#F7F6F3; --card:#FFFFFF; --ink:#211F1B; --muted:#6E6961;
+  --line:#E4E1DA; --accent:#2F5D50; --accent-soft:#EAF0EE;
+  --warn:#A05E1C; --warn-soft:#F6EDE2; --danger:#9C3B2E; --danger-soft:#F5E9E6;
+  --mono-bg:#26241F; --mono-ink:#EDEAE3;
+  --human-bg:#F3E4C6; --human-ink:#6E4A0C; --worker-bg:#E3E6F5; --worker-ink:#33407A;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#1C1B18; --card:#26241F; --ink:#EDEAE3; --muted:#A39D92;
+    --line:#3A372F; --accent:#7FB5A5; --accent-soft:#2C3B36;
+    --warn:#D99A55; --warn-soft:#3B3226; --danger:#D97F6C; --danger-soft:#3D2B26;
+    --mono-bg:#141310; --mono-ink:#E6E2D9;
+    --human-bg:#4A3A1C; --human-ink:#F0D9A8; --worker-bg:#2E3352; --worker-ink:#C5CCF0;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#1C1B18; --card:#26241F; --ink:#EDEAE3; --muted:#A39D92;
+  --line:#3A372F; --accent:#7FB5A5; --accent-soft:#2C3B36;
+  --warn:#D99A55; --warn-soft:#3B3226; --danger:#D97F6C; --danger-soft:#3D2B26;
+  --mono-bg:#141310; --mono-ink:#E6E2D9;
+  --human-bg:#4A3A1C; --human-ink:#F0D9A8; --worker-bg:#2E3352; --worker-ink:#C5CCF0;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--ground); color:var(--ink); font:16px/1.6 var(--display); margin:0; padding-block:2.5rem 5rem; padding-inline:1.25rem}
+main{max-width:720px; margin:0 auto}
+h1{font-size:2.1rem; font-weight:700; letter-spacing:-.02em; line-height:1.12; margin:0 0 .5rem; text-wrap:balance}
+.lede{color:var(--muted); margin:0 0 1.4rem; max-width:62ch; font-size:1.05rem}
+h2{font-size:.78rem; font-weight:600; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin:3rem 0 1rem; scroll-margin-top:4.5rem}
+h3{font-size:1.08rem; font-weight:600; margin:1.4rem 0 .4rem; letter-spacing:-.01em; text-wrap:balance}
+p{margin:.6rem 0; max-width:68ch}
+a{color:var(--accent)}
+strong{font-weight:600}
+ul{margin:.4rem 0 .4rem 1.2rem; padding:0}
+li{margin:.3rem 0}
+code{font:.86em var(--mono); background:var(--accent-soft); border-radius:4px; padding:.1em .35em; overflow-wrap:anywhere}
+pre{background:var(--mono-bg); color:var(--mono-ink); border-radius:8px; padding:.9rem 1rem; overflow-x:auto; font:.85rem/1.55 var(--mono); margin:.7rem 0}
+pre .c{color:#9A948A}
+
+.status{display:flex; flex-wrap:wrap; gap:.5rem .6rem; margin:0 0 1.6rem}
+.status span{font:500 .8rem/1 var(--mono); border:1px solid var(--line); border-radius:999px; padding:.45rem .7rem; color:var(--muted); background:var(--card)}
+.status span.live{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+
+nav.toc{position:sticky; top:env(safe-area-inset-top,0px); z-index:5; background:var(--ground); border-bottom:1px solid var(--line); margin:0 0 1.6rem; padding:.6rem 0; display:flex; gap:.2rem 1rem; flex-wrap:wrap; font-size:.85rem}
+nav.toc a{color:var(--muted); text-decoration:none; font-weight:500; padding:.2rem 0}
+nav.toc a:hover, nav.toc a:focus-visible{color:var(--accent)}
+
+.hand{background:var(--card); border:1px solid var(--accent); border-radius:10px; padding:1.3rem 1.5rem 1.2rem; margin:1rem 0 .4rem}
+.hand h3{margin:0 0 .9rem; font-size:1.15rem}
+.kv{display:grid; grid-template-columns:9rem 1fr; gap:.55rem 1rem; align-items:center; font-size:.97rem}
+.kv .k{color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.07em; font-weight:600}
+.kv .v{min-width:0; display:flex; align-items:center; gap:.6rem; flex-wrap:wrap}
+.kv .v code{font-size:.95rem; padding:.25em .5em}
+.copy{font:500 .75rem var(--display); border:1px solid var(--line); background:var(--ground); color:var(--ink); border-radius:6px; padding:.3rem .6rem; cursor:pointer}
+.copy:hover, .copy:focus-visible{border-color:var(--accent); color:var(--accent); outline:none}
+.copy.ok{border-color:var(--accent); color:var(--accent)}
+.hand .note{color:var(--muted); font-size:.9rem; margin:.9rem 0 0}
+
+.tablewrap{overflow-x:auto; margin:.8rem 0}
+table{border-collapse:collapse; width:100%; font-size:.92rem}
+th{text-align:left; font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); font-weight:600; padding:.45rem .7rem .45rem 0; border-bottom:1px solid var(--line); white-space:nowrap}
+td{padding:.55rem .7rem .55rem 0; border-bottom:1px solid var(--line); vertical-align:top}
+td code{white-space:nowrap}
+
+.who{display:inline-block; font:700 .66rem/1 var(--mono); text-transform:uppercase; letter-spacing:.07em; border-radius:4px; padding:.3em .5em; margin-right:.35rem; vertical-align:middle; white-space:nowrap}
+.who.human{background:var(--human-bg); color:var(--human-ink)}
+.who.auto{background:var(--accent-soft); color:var(--accent)}
+.who.worker{background:var(--worker-bg); color:var(--worker-ink)}
+.legend{display:grid; gap:.55rem; margin:1rem 0 .4rem; font-size:.93rem}
+.legend div{display:flex; gap:.6rem; align-items:flex-start}
+.legend div > div{min-width:0}
+
+.flow{display:grid; grid-template-columns:auto 1fr; gap:.7rem 1rem; margin:1rem 0 .4rem; font-size:.95rem}
+.flow .n{font:600 .78rem/1 var(--mono); color:var(--accent); background:var(--accent-soft); border-radius:5px; padding:.35rem .5rem; align-self:start; margin-top:.15rem}
+.flow > div{min-width:0}
+.flow .line{display:block; margin:.15rem 0}
+
+.steps td{font-size:.9rem}
+.steps th:nth-child(1), .steps td.num{width:2.4rem}
+.steps td.num{font:600 .8rem/1.6 var(--mono); color:var(--accent)}
+.steps td.who-cell{white-space:nowrap; font-weight:600}
+.steps td.who-cell.requester{color:var(--human-ink)}
+.steps td.who-cell.approver{color:var(--worker-ink)}
+.steps td.who-cell.nobody{color:var(--muted); font-weight:500}
+.steps td:nth-child(3), .steps td:nth-child(4){min-width:14rem}
+.steps .dim{color:var(--muted); font-size:.82rem}
+.callout{border-radius:8px; padding:.8rem 1rem; margin:.9rem 0; font-size:.94rem; border-left:3px solid var(--accent); background:var(--accent-soft)}
+.callout.warn{background:var(--warn-soft); border-left-color:var(--warn)}
+.callout p{margin:.3rem 0}
+
+.timeline{display:grid; grid-template-columns:auto 1fr; gap:.5rem 1rem; font-size:.95rem; margin:1rem 0}
+.timeline .d{font:500 .8rem/1.6 var(--mono); color:var(--muted); white-space:nowrap}
+.timeline > div{min-width:0}
+
+.foot{color:var(--muted); font-size:.85rem; margin-top:3rem; border-top:1px solid var(--line); padding-top:1rem}
+
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+@media (max-width:560px){
+  .kv{grid-template-columns:1fr; gap:.2rem .5rem}
+  .kv .k{margin-top:.5rem}
+  body{padding-block:1.4rem 4rem}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>AFLALO Pull Portal</h1>
+<p class="lede">How the team borrows inventory from the NYC stock without draft orders. A requester fills one form, Sarena or Lillian approve each item, the approved units are reserved in Shopify so the website can't sell them while they're out, and the hold is released when the pieces come back. This page is the one place for the whole project: what it is, how it works, what it runs on, and everything you need to hand it to someone else.</p>
+
+<div class="status">
+  <span class="live">Live since Sep 30, 2026</span>
+  <span>Railway, one service</span>
+  <span>Shopify location: NYC</span>
+  <span>Worker every 5 min</span>
+  <span>No AI involved</span>
+</div>
+
+<nav class="toc" aria-label="Sections">
+  <a href="#team">For the team</a>
+  <a href="#why">Why it exists</a>
+  <a href="#flow">The workflow</a>
+  <a href="#forms">The forms</a>
+  <a href="#tables">The Airtable base</a>
+  <a href="#tech">The tech</a>
+  <a href="#handoff">Handoff</a>
+  <a href="#history">History</a>
+</nav>
+
+<h2 id="team">For the team</h2>
+<div class="hand">
+  <h3>How to request a pull</h3>
+  <div class="kv">
+    <span class="k">Request form</span>
+    <span class="v"><a href="https://portal-production-18f8.up.railway.app" id="form-url">portal-production-18f8.up.railway.app</a><button class="copy" type="button" data-copy="https://portal-production-18f8.up.railway.app" id="copy-url">Copy link</button></span>
+    <span class="k">Passcode</span>
+    <span class="v">Ask Sanskriti, or read <code>PORTAL_PASSCODE</code> on the Railway service. It is not written down in this repo.</span>
+    <span class="k">Your email</span>
+    <span class="v">Must be an <strong>@aflalonyc.com</strong> address. Other domains are refused.</span>
+    <span class="k">Who approves</span>
+    <span class="v">Sarena or Lillian, item by item, in Airtable.</span>
+    <span class="k">Returning</span>
+    <span class="v">Use the return link in your confirmation email. It is already filled in for your pull.</span>
+  </div>
+  <p class="note">Up to five items per pull, one to five units each. Only products that are active on the website can be pulled. If you ask for more than NYC has, that item is marked short right away and you get an email saying how many there actually are.</p>
+</div>
+
+<h2 id="why">Why it exists, and why it's built this way</h2>
+<p><strong>The problem.</strong> Internal pulls (stylist and celebrity loans, design reference, photoshoots) were tracked with Shopify draft orders. A draft order has no approval step, no return date, and no owner. People forgot to return pieces or forgot to cancel the draft, and the inventory numbers lied.</p>
+
+<h3>What's different about this solution</h3>
+<ul>
+  <li><strong>It uses Shopify's own reservation state, not a workaround.</strong> Shopify tracks inventory in named states: available, reserved, committed, on hand. Approving a pull moves units from <em>available</em> to <em>reserved</em> through the official inventory-move API, with the reason Shopify itself defines for reservations. The website sells against <em>available</em>, so a reserved unit physically cannot be oversold while it's out. Returning it is the reverse move.</li>
+  <li><strong>Every reservation names its request.</strong> Shopify requires a ledger document for any non-available move. The worker writes the pull's own Airtable URL there. Open Shopify's inventory history on any variant and each held unit says which pull holds it and since when. That audit trail is exactly the discipline draft orders lacked.</li>
+  <li><strong>Approvals can't double-book.</strong> Each move states the quantity it expects to find first. If two approvals race for the last unit, or something sells between the check and the move, Shopify refuses the second move instead of going negative, and the worker reports Insufficient stock rather than guessing.</li>
+  <li><strong>Humans only ever make decisions.</strong> The requester fills two forms. Approvers change one dropdown per item. Nobody types counts, sends emails, or touches Shopify by hand.</li>
+  <li><strong>No AI anywhere.</strong> The worker is a fixed sequence that runs every five minutes. Same input, same output, every time. It is the only thing that talks to Shopify, and it either does the exact move it logged or refuses and says why.</li>
+  <li><strong>The forms are ours.</strong> Airtable's form builder can't do several items each with a quantity, or a searchable item picker with live counts. So the portal serves its own two web pages. They write straight into the Airtable base, and the team keeps working in Airtable as before.</li>
+</ul>
+
+<h2 id="flow">The workflow</h2>
+<p>Five steps, in order. Only two people ever do anything: the requester and an approver (Sarena or Lillian). Everything in the "then, automatically" column happens on its own within about five minutes.</p>
+<div class="tablewrap"><table class="steps">
+<tr><th>Step</th><th>Who</th><th>Does what</th><th>Then, automatically</th><th>Item status</th></tr>
+<tr>
+  <td class="num">1</td>
+  <td class="who-cell requester">Requester</td>
+  <td>Fills the <strong>request form</strong>: up to 5 items with quantities, a reason, what it's for, an expected return date, the passcode.</td>
+  <td>One row per item is created and checked against live NYC stock. Sarena and Lillian get one email listing every item with its count and an approve link. The requester gets a confirmation with their return link. Any item asking for more than NYC has is marked short and the requester is told the real count.</td>
+  <td><strong>Requested</strong><br><span class="dim">or Insufficient stock</span></td>
+</tr>
+<tr>
+  <td class="num">2</td>
+  <td class="who-cell approver">Sarena or Lillian</td>
+  <td>In Airtable, sets each item's Status to <strong>Approved</strong> or <strong>Denied</strong> (with a reason). Items on one pull are decided one by one.</td>
+  <td>Denied: the requester gets the reason by email. Approved: the units are reserved in Shopify, so the website can't sell them. Decided By records who decided.</td>
+  <td><strong>Reserved</strong><br><span class="dim">or Denied</span></td>
+</tr>
+<tr>
+  <td class="num">3</td>
+  <td class="who-cell nobody">Nobody</td>
+  <td>The pieces are out. Nothing to do.</td>
+  <td>On the return date the requester gets a reminder with the return form. Past it, the item shows OVERDUE, the requester gets a daily email (Sarena and Lillian copied), and the approvers get a 9am digest of every overdue item.</td>
+  <td><strong>Reserved</strong><br><span class="dim">+ OVERDUE tag if late</span></td>
+</tr>
+<tr>
+  <td class="num">4</td>
+  <td class="who-cell requester">Requester</td>
+  <td>Opens the return link from any of their emails and answers the <strong>return form</strong>: Yes they're back, or Not yet, plus condition notes.</td>
+  <td>A Yes flips the pull's reserved items to Return submitted. Sarena and Lillian get the answer, and the item stays on their 9:10am "returns waiting on you" email until one of them accepts it.</td>
+  <td><strong>Return submitted</strong></td>
+</tr>
+<tr>
+  <td class="num">5</td>
+  <td class="who-cell approver">Sarena or Lillian</td>
+  <td>Checks the pieces and sets the item's Status to <strong>Return accepted</strong>, or <strong>Write-off</strong> if it isn't coming back.</td>
+  <td>Accepted: the hold is released and the units are sellable again. Write-off: the units move to Shopify's damaged bucket, never sellable. Closed At is stamped.</td>
+  <td><strong>Closed</strong></td>
+</tr>
+</table></div>
+<p>A pull reads <strong>Closed</strong> once every item on it is closed, by whatever path: accepted, denied, short, or written off. Partial approval is normal. Only approved items are ever reserved, and a Yes on the return form only affects items that were actually out.</p>
+
+<h2 id="forms">The forms</h2>
+<h3>Request form (the link above)</h3>
+<div class="tablewrap"><table>
+<tr><th>Field</th><th>Rule</th></tr>
+<tr><td>Your email</td><td>Required. Must end in @aflalonyc.com.</td></tr>
+<tr><td>Reason</td><td>Stylist/celebrity loan, Design reference, or Photoshoot. New reasons are added in Airtable, no code change.</td></tr>
+<tr><td>What is it for?</td><td>Required, free text. The shoot, client, or stylist name. It leads the approver email's subject and is copied to every item row so Pull Requests is searchable by it.</td></tr>
+<tr><td>Expected return date</td><td>Required. Drives the reminder and the overdue emails.</td></tr>
+<tr><td>Items</td><td>One to five rows. Each has a search picker (type a style, color, or size) showing the live NYC count, and a quantity of 1 to 5. Only active products appear.</td></tr>
+<tr><td>Passcode</td><td>The shared team passcode. Wrong or missing means the form is refused.</td></tr>
+</table></div>
+<h3>Return form</h3>
+<p>Lives at <code>/return/&lt;pull&gt;</code> and is reached from the link in the requester's emails, so the pull is already filled in. It asks Returned? (Yes, they're back / Not yet), condition notes, and the passcode. Each answer is processed once.</p>
+
+<h2 id="tables">The Airtable base</h2>
+<p>Base: <a href="https://airtable.com/appTrtbXNlwlgzfcG">AFLALO Inventory Pulls</a>. Four tables. Two forms, two tables: the request form writes Pull Orders, the return form writes Pull Returns. Nobody types into the other two by hand.</p>
+<div class="tablewrap"><table>
+<tr><th>Table</th><th>One row is</th><th>Written by</th><th>What it's for</th></tr>
+<tr><td><strong>Pull Orders</strong></td><td>one form submission, a "pull"</td><td>the request form</td><td>The pull as a whole. Items column lists everything asked for with counts (short asks marked). State is Pending, Open, or Closed. Return form link is pre-filled for this pull. Every email is built from this row.</td></tr>
+<tr><td><strong>Pull Requests</strong></td><td>one item on a pull</td><td>the worker</td><td>Where Sarena and Lillian work. Each item has its own Status, State, Overdue tag, Worker Log, and Decided By. Linked back to its pull.</td></tr>
+<tr><td><strong>Pull Returns</strong></td><td>one return-form answer</td><td>the return form</td><td>The requester's word that the pieces are back, with condition notes.</td></tr>
+<tr><td><strong>Pull Inventory</strong></td><td>one variant (style, color, size) at NYC</td><td>the worker, every pass</td><td>Live counts from Shopify. The form's pickers search this list. Gift cards excluded. Retired variants drop to 0.</td></tr>
+</table></div>
+
+<h2 id="tech">The tech</h2>
+<div class="tablewrap"><table>
+<tr><th>Piece</th><th>What it is</th><th>Where</th></tr>
+<tr><td><strong>Portal service</strong></td><td>One Python process. Serves the two forms and runs the worker on a five-minute timer in the same process. Health check at <code>/health</code>.</td><td>Railway, project <code>aflalo-inventory-pulls</code>, service <code>portal</code>, workspace AFLALO Projects</td></tr>
+<tr><td><strong>Code</strong></td><td>Plain Python 3.12, standard library only (no framework). Tests fake Shopify and Airtable.</td><td>GitHub <code>aflalo-nyc/Inventory-Pull</code>, branch main. Every push to main redeploys automatically.</td></tr>
+<tr><td><strong>Shopify app</strong></td><td>The portal's own app, <code>inventory-portal</code>, with only the scopes it needs: write and read inventory, read products, read locations, read draft orders. The CS agent's app is separate and has no write access.</td><td>Shopify Dev Dashboard, store aflalo.myshopify.com</td></tr>
+<tr><td><strong>Airtable base</strong></td><td>The four tables above plus nine automations that send every email.</td><td><code>appTrtbXNlwlgzfcG</code></td></tr>
+</table></div>
+
+<h3>Inside the code</h3>
+<pre>aflalo_pulls/web.py                the two forms (request at /, return at /return/&lt;pull&gt;) + worker timer
+aflalo_pulls/worker.py             the worker: setup, fan-out, returns, reserve/release, --flow
+aflalo_pulls/shopify_inventory.py  the verified inventory moves (reserve / release / write-off)
+aflalo_pulls/shopify_client.py     token mint + GraphQL POST
+aflalo_pulls/airtable.py           small Airtable REST client
+aflalo_pulls/config.py             .env loader
+tests/                             the decision logic, with Shopify and Airtable faked
+docs/DECISIONS.md                  every design decision and its reason, dated
+docs/SCOPING.md                    the Shopify API feasibility check, with evidence</pre>
+
+<h3>Settings on the Railway service</h3>
+<p>Railway injects these as the environment. There is no .env file on the server. Values live in Railway's Variables tab and in the gitignored local <code>inventory-pulls/.env</code> on Sanskriti's Mac.</p>
+<div class="tablewrap"><table>
+<tr><th>Variable</th><th>Meaning</th></tr>
+<tr><td><code>SHOPIFY_SHOP_DOMAIN</code></td><td>aflalo.myshopify.com</td></tr>
+<tr><td><code>PORTAL_SHOPIFY_API_KEY</code> / <code>_SECRET</code></td><td>The inventory-portal app's client credentials</td></tr>
+<tr><td><code>PORTAL_LOCATION_NAME</code></td><td>NYC. The store has three active locations (NYC, SAMPLE SALE, Wholesale). The worker looks the name up live and refuses to run if it isn't found.</td></tr>
+<tr><td><code>AIRTABLE_TOKEN</code> / <code>PULLS_AIRTABLE_BASE</code></td><td>Personal access token with access to the base, and the base id</td></tr>
+<tr><td><code>PORTAL_URL</code></td><td>The public address. Emails link to it.</td></tr>
+<tr><td><code>PORTAL_PASSCODE</code> / <code>PORTAL_EMAIL_DOMAIN</code></td><td>The team passcode and the required email domain</td></tr>
+<tr><td><code>WORKER_LIVE</code></td><td>1 means move inventory. Unset means dry run: the worker reads and reports but touches nothing.</td></tr>
+<tr><td><code>WORKER_INTERVAL_MIN</code></td><td>Minutes between passes. 5 today. 0 turns the worker off and leaves only the forms.</td></tr>
+</table></div>
+
+<h2 id="handoff">Handoff</h2>
+<p>Everything someone else needs to run or change the portal without Sanskriti.</p>
+
+<h3>Identifiers</h3>
+<div class="tablewrap"><table>
+<tr><th>Thing</th><th>Id or address</th></tr>
+<tr><td>Public address</td><td><code>https://portal-production-18f8.up.railway.app</code></td></tr>
+<tr><td>Railway project</td><td><code>aflalo-inventory-pulls</code> · <code>e479daaf-a7ac-4db6-b562-286f08a7868e</code></td></tr>
+<tr><td>Railway service</td><td><code>portal</code> · <code>92afce51-ee5d-47e5-b3ca-ebe04a92fef3</code></td></tr>
+<tr><td>Railway environment</td><td><code>production</code> · <code>35e79ec3-727a-4fdd-ba57-e69bc496e1c8</code></td></tr>
+<tr><td>GitHub repo</td><td><code>aflalo-nyc/Inventory-Pull</code>, branch <code>main</code></td></tr>
+<tr><td>Airtable base</td><td><code>appTrtbXNlwlgzfcG</code></td></tr>
+<tr><td>Airtable tables</td><td>Pull Orders <code>tblFjgARK1pTiy1cz</code> · Pull Requests <code>tblPhysjBEBvj0efa</code> · Pull Returns <code>tblxxax2rmCpFKAs8</code> · Pull Inventory <code>tblGnywx3pHFnxoC2</code></td></tr>
+<tr><td>Shopify app</td><td><code>inventory-portal</code> on aflalo.myshopify.com</td></tr>
+</table></div>
+
+<h3>The nine automations (Airtable, Automations tab)</h3>
+<div class="tablewrap"><table>
+<tr><th>Email</th><th>When</th><th>To</th></tr>
+<tr><td>New pull + requester confirmation</td><td>Worker finishes creating the item rows</td><td>Sarena, Lillian; requester gets the return link</td></tr>
+<tr><td>Short stock</td><td>Any item on the pull is short</td><td>Requester</td></tr>
+<tr><td>Denied</td><td>Status set to Denied</td><td>Requester, with the reason</td></tr>
+<tr><td>Over-ask backstop</td><td>Status set to Insufficient stock</td><td>Requester, with the real count</td></tr>
+<tr><td>Return-day reminder</td><td>9:00am ET on the return date</td><td>Requester</td></tr>
+<tr><td>Overdue, per pull</td><td>9:05am ET daily while overdue</td><td>Requester, cc Sarena and Lillian</td></tr>
+<tr><td>Overdue digest</td><td>9:00am ET daily if anything is overdue</td><td>Sarena, Lillian</td></tr>
+<tr><td>Return form answered</td><td>Requester submits the return form</td><td>Sarena, Lillian</td></tr>
+<tr><td>Returns waiting on you</td><td>9:10am ET daily while any item sits at Return submitted</td><td>Sarena, Lillian</td></tr>
+</table></div>
+<p>All nine are published and valid as of Sep 30, 2026.</p>
+
+<h3>Common changes</h3>
+<div class="tablewrap"><table>
+<tr><th>You want to</th><th>Do this</th></tr>
+<tr><td>Pause all inventory moves</td><td>Railway → portal → Variables → remove <code>WORKER_LIVE</code>. The forms keep working, the worker goes to dry run. Set it back to 1 to resume.</td></tr>
+<tr><td>Change the passcode</td><td>Set a new <code>PORTAL_PASSCODE</code> on Railway. It applies on the redeploy a minute later. Update the local .env and this page.</td></tr>
+<tr><td>Add a reason</td><td>Edit the <code>REASONS</code> list at the top of <code>worker.py</code> and push. Adding the option in Airtable alone isn't enough, the form validates against the code's list.</td></tr>
+<tr><td>Change approvers</td><td>Edit the To field on the automations above. The code doesn't know who approves.</td></tr>
+<tr><td>Pull from a different location</td><td>Set <code>PORTAL_LOCATION_NAME</code> to the exact Shopify location name.</td></tr>
+<tr><td>Move the site</td><td>Set <code>PORTAL_URL</code>, then run <code>worker --return-form-url &lt;new url&gt;</code> once so existing pulls' return links follow.</td></tr>
+<tr><td>See where every pull stands</td><td>Locally: <code>python -m aflalo_pulls.worker --flow</code>. It prints each pull's step and its exact next action.</td></tr>
+<tr><td>Read what the worker did</td><td>Railway → portal → Deploy logs. Lines start with <code>worker:</code>. Each item row also has a Worker Log column in Airtable.</td></tr>
+</table></div>
+
+<h3>Optional cleanup in Airtable</h3>
+<div class="callout">
+<p>Checked live on Sep 30: every automation is published and valid, and the old Form view on Pull Requests is gone. Nothing is required. Two leftovers from the September redesign remain and are purely cosmetic. Delete them whenever convenient, or never.</p>
+<ul>
+  <li>On Pull Requests, the Status option <strong>Returned</strong> is unused. It was replaced by Return accepted. No row carries it and the code never sets it.</li>
+  <li>Four empty columns can go: <em>Item (legacy text)</em> and <em>Quantity (legacy)</em> on Pull Requests, and the two renamed <em>(broken link, safe to delete)</em> on Pull Requests and Pull Returns. The code tolerates their absence.</li>
+</ul>
+</div>
+
+<h3>If something looks wrong</h3>
+<div class="tablewrap"><table>
+<tr><th>What you see</th><th>Why</th><th>Fix</th></tr>
+<tr><td>No alert email after a submit</td><td>Automation off, or the worker hasn't passed yet</td><td>Wait five minutes. Then check the automation is on and its To field.</td></tr>
+<tr><td>A pull sits at Pending</td><td>The worker hasn't run since the submit</td><td>Normal for up to five minutes. Longer: check Railway deploy logs.</td></tr>
+<tr><td>Worker Log says <code>reserve: FAILED</code> with quantities</td><td>Stock changed between the check and the move. The guard refused rather than double-book.</td><td>Nothing. The next pass retries with fresh numbers, or files it as short.</td></tr>
+<tr><td>Form says the passcode is wrong</td><td>Typo, or the passcode was rotated</td><td>Check the passcode at the top of this page.</td></tr>
+<tr><td>Return form opens with no pull</td><td>Opened the bare address instead of the email link</td><td>Use the link in any of the pull's emails.</td></tr>
+<tr><td>Emails in spam</td><td>First-time Airtable sender</td><td>Mark not-spam once.</td></tr>
+</table></div>
+<p>The worker never moves inventory wrongly in silence. It either does the exact move it logged or refuses and writes why into Worker Log.</p>
+
+<h2 id="history">History</h2>
+<div class="timeline">
+  <span class="d">Sep 1</span><div><strong>Scoped.</strong> Verified against the live store that Shopify has a first-class reserved state, a move mutation with a race guard, and a mandatory audit ledger. Draft orders named as the system being replaced.</div>
+  <span class="d">Sep 3</span><div><strong>Decisions taken with the team.</strong> NYC stock, anyone can request, Lillian and Sarena approve, reserve on approval, block over-asks, daily overdue email, never-returned goes to write-off. Base and first four automations built.</div>
+  <span class="d">Sep 11</span><div><strong>Smarter form.</strong> Item became a searchable linked record with live counts after a typed item name matched nothing. Quantity capped at 5. Decided By added.</div>
+  <span class="d">Sep 14</span><div><strong>Redesign after the first supervised test.</strong> Pulls with several items, a return form, Open/Closed/Overdue states, every email grouped per pull. Four tables in their current shape.</div>
+  <span class="d">Sep 30</span><div><strong>Our own forms, and live.</strong> Airtable's form builder couldn't do multi-item pulls, so the portal serves its own request and return pages. "What is it for?" added. Deployed to Railway, pointed at NYC, switched to live with zero open pulls.</div>
+</div>
+
+<p class="foot">Maintained by Sanskriti Akhoury. Design decisions and their reasons are in docs/DECISIONS.md in the repo. Last updated Sep 30, 2026.</p>
+</main>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.copy');
+  Array.prototype.forEach.call(buttons, function(b){
+    var original = b.textContent;
+    b.addEventListener('click', function(){
+      var text = b.getAttribute('data-copy');
+      function done(ok){
+        b.textContent = ok ? 'Copied' : 'Select and copy';
+        b.classList.toggle('ok', ok);
+        setTimeout(function(){ b.textContent = original; b.classList.remove('ok'); }, 1800);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ fallback(); });
+      } else { fallback(); }
+      function fallback(){
+        var target = b.previousElementSibling;
+        try {
+          var range = document.createRange(); range.selectNodeContents(target);
+          var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        } catch(e) {}
+        done(false);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
