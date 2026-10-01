@@ -50,7 +50,9 @@ MAX_QUANTITY = 5      # the form's dropdown stops here (team, 2026-09-11)
 SLOTS = 5             # items per form submission (team, 2026-09-14)
 QTY_OPTIONS = [str(n) for n in range(1, MAX_QUANTITY + 1)]
 REASONS = ["Stylist/celebrity loan", "Design reference", "Photoshoot"]
-RETURN_FORM_PLACEHOLDER = "https://airtable.com/PASTE-THE-RETURN-FORM-SHARE-LINK"
+# The portal's own web pages (aflalo_pulls/web.py). PORTAL_URL is where they are hosted;
+# until it is set, the formula carries a placeholder that is obviously not a link.
+PORTAL_URL = os.environ.get("PORTAL_URL", "https://SET-PORTAL_URL").rstrip("/")
 GIFT_CARD_RE = re.compile(r"gift\s*card", re.I)
 
 # Line statuses. Humans set Approved / Denied / Return accepted / Write-off; the worker
@@ -190,8 +192,8 @@ DERIVED: list[dict[str, Any]] = [
      "formula": 'IF({Lines created}, IF({Open lines} > 0, "Open", "Closed"), "Pending")',
      "description": "Open while any item is open; Pending until the worker has created the item rows."},
     {"table": ORDERS_TABLE, "name": "Return form link", "kind": "formula",
-     "formula": f'"{RETURN_FORM_PLACEHOLDER}?prefill_Pull=" & {{Pull #}}',
-     "description": "The return form, pre-filled with this pull. Set the real link with `worker --return-form-url`."},
+     "formula": f'"{PORTAL_URL}/return/" & RECORD_ID()',
+     "description": "The portal's return page for this pull. Re-point with `worker --return-form-url <portal url>`."},
     # returns
     {"table": RETURNS_TABLE, "name": "Pull", "kind": "link", "to": ORDERS_TABLE,
      "description": "Which pull is being returned. Pre-filled from the link in your emails."},
@@ -377,7 +379,7 @@ def set_return_form_url(token: str, base: str, url: str) -> None:
     t = schema[ORDERS_TABLE]
     f = next(x for x in t["fields"] if x["name"] == "Return form link")
     _meta(token, base, "PATCH", f"tables/{t['id']}/fields/{f['id']}",
-          {"options": {"formula": f'"{url.rstrip("/")}?prefill_Pull=" & {{Pull #}}'}})
+          {"options": {"formula": f'"{url.rstrip("/")}/return/" & RECORD_ID()'}})
 
 
 # ---- inventory sync -----------------------------------------------------------------------
@@ -719,13 +721,30 @@ FLOW_EXPLAINER = """THE FLOW (each step, who does it, and what to expect)
 """
 
 
+def run_once(shop: PortalShopify, tables: dict[str, Airtable], base: str, live: bool) -> list[str]:
+    """One full pass: sync stock, fan out new pulls, process return forms, execute moves."""
+    orders, lines, returns, inventory = (tables[ORDERS_TABLE], tables[REQUESTS_TABLE],
+                                         tables[RETURNS_TABLE], tables[INVENTORY_TABLE])
+    out = [f"inventory synced: {sync_inventory(shop, inventory)} items"]
+    out += ["  " + l for l in fan_out(orders, lines, inventory)]
+    out += ["  " + l for l in process_returns(returns, orders, lines)]
+    log = process(shop, lines, inventory, base, lines.create_table(), live=live)
+    out += ["  " + l for l in log]
+    if live and any(": ok" in l for l in log):
+        sync_inventory(shop, inventory)
+        out.append("inventory re-synced after moves")
+    if not live:
+        out.append("(dry-run — no inventory was moved; add --live to execute)")
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(prog="aflalo-pulls")
     ap.add_argument("--setup", action="store_true", help="create/upgrade the four Airtable tables")
     ap.add_argument("--flow", action="store_true", help="show where every pull stands and what happens next")
     ap.add_argument("--once", action="store_true", help="one pass: fan out, validate, sync, execute moves")
     ap.add_argument("--live", action="store_true", help="actually move inventory (default: dry-run)")
-    ap.add_argument("--return-form-url", metavar="URL", help="the shared link of the return form")
+    ap.add_argument("--return-form-url", metavar="URL", help="where the portal web pages are hosted (PORTAL_URL)")
     ap.add_argument("--draft-audit", action="store_true", help="list open draft orders (legacy)")
     args = ap.parse_args()
 
@@ -754,14 +773,14 @@ def main() -> int:
             print(f"  {name:15} https://airtable.com/{base}/{schema[name]['id']}")
         if made:
             print("  created:", ", ".join(made))
-        print("Next (in Airtable): the request form on Pull Orders (Requester Email, Reason, Expected\n"
-              "Return Date, Item 1..5, Qty 1..5); the return form on Pull Returns (Pull, Returned?,\n"
-              "Return condition); then `worker --return-form-url <its share link>`.")
+        print("Forms: `python -m aflalo_pulls.web` serves the request form at / and the return form\n"
+              "at /return/<pull>. Set PORTAL_URL (or run `worker --return-form-url <url>`) so emails\n"
+              "link to them.")
         return 0
 
     if args.return_form_url:
         set_return_form_url(token, base, args.return_form_url)
-        print("return form link set; every pull's 'Return form link' now points at it, pre-filled")
+        print("every pull's 'Return form link' now points at <url>/return/<pull record>")
         return 0
 
     if args.flow:
@@ -779,21 +798,8 @@ def main() -> int:
         return 0
 
     if args.once:
-        n = sync_inventory(shop, inventory)
-        print(f"inventory synced: {n} items")
-        for line in fan_out(orders, lines, inventory):
-            print(" ", line)
-        for line in process_returns(returns, orders, lines):
-            print(" ", line)
-        table_id = lines.create_table()
-        log = process(shop, lines, inventory, base, table_id, live=args.live)
-        for line in log:
-            print(" ", line)
-        if args.live and any(": ok" in line for line in log):
-            sync_inventory(shop, inventory)
-            print("inventory re-synced after moves")
-        if not args.live:
-            print("(dry-run — no inventory was moved; add --live to execute)")
+        for line in run_once(shop, tables, base, live=args.live):
+            print(line)
         return 0
 
     ap.print_help(); return 0

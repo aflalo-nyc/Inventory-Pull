@@ -2,8 +2,8 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": { "builder": "NIXPACKS" },
   "deploy": {
-    "cronSchedule": "*/5 * * * *",
-    "startCommand": "python -m aflalo_pulls.worker --once --live",
-    "restartPolicyType": "NEVER"
+    "startCommand": "python -m aflalo_pulls.web",
+    "healthcheckPath": "/health",
+    "restartPolicyType": "ON_FAILURE"
   }
 }
