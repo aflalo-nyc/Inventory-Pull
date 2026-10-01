@@ -59,7 +59,11 @@ def parse_request(form: dict[str, str], known_items: set[str]) -> dict[str, Any]
     date = form.get("return_date", "")
     if not date or len(date) != 10:
         raise Rejected("Pick an expected return date.")
-    fields: dict[str, Any] = {"Requester Email": email, "Reason": reason, "Expected Return Date": date}
+    description = " ".join(form.get("description", "").split())[:500]
+    if len(description) < 3:
+        raise Rejected("Say what it's for: which shoot, client, or stylist.")
+    fields: dict[str, Any] = {"Requester Email": email, "Reason": reason, "Description": description,
+                              "Expected Return Date": date}
     seen: set[str] = set()
     n = 0
     for i in range(1, SLOTS + 1):
@@ -139,6 +143,7 @@ def request_form(error: str = "", values: dict[str, str] | None = None) -> str:
 <form method=post action=/submit id=f>
 <label>Your email</label><input name=email type=email required placeholder="you@{EMAIL_DOMAIN}" value="{v.get('email','')}">
 <label>Reason</label><select name=reason required><option value="" disabled {'selected' if not v.get('reason') else ''}>Pick one</option>{reasons}</select>
+<label>What is it for?</label><input name=description required maxlength=500 placeholder="e.g. Zoe Kravitz shoot, Oct 3 — or the client / stylist name" value="{v.get('description','')}">
 <label>Expected return date</label><input name=return_date type=date required value="{v.get('return_date','')}">
 <label>Items</label>
 <div id=items></div>
@@ -189,7 +194,7 @@ def return_form(rec: str, order: dict[str, Any], error: str = "") -> str:
     items = html.escape((order.get("Items") or "").strip())
     body = f"""
 <h1>Return pull #{html.escape(str(order.get('Pull #', '?')))}</h1>
-<p class=sub>Requested by {html.escape(order.get('Requester Email', '?'))}, due back {html.escape(order.get('Expected Return Date', '?'))}.</p>
+<p class=sub>{html.escape(order.get('Description', ''))} — requested by {html.escape(order.get('Requester Email', '?'))}, due back {html.escape(order.get('Expected Return Date', '?'))}.</p>
 <pre>{items}</pre>
 {f'<div class=err>{html.escape(error)}</div>' if error else ''}
 <form method=post action=/return/submit>

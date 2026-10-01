@@ -72,6 +72,7 @@ REQUEST_SCHEMA: list[dict[str, Any]] = [
     {"name": "Requester Email", "type": "email", "note": "Copied from the pull order."},
     {"name": "Quantity", "type": "singleSelect", "note": f"1 to {MAX_QUANTITY}.", "options": QTY_OPTIONS},
     {"name": "Reason", "type": "singleSelect", "note": "Copied from the pull order.", "options": REASONS},
+    {"name": "Description", "type": "multilineText", "note": "Which shoot / client / stylist. Copied from the pull so items are searchable by it."},
     {"name": "Expected Return Date", "type": "date", "note": "Copied from the pull order. Drives the return-day and overdue emails."},
     {"name": "Status", "type": "singleSelect", "note": "Approvers set Approved / Denied / Return accepted / Write-off. The worker sets the rest.",
      "options": LINE_STATUSES},
@@ -86,6 +87,7 @@ ORDER_FIELDS: list[dict[str, Any]] = [
     {"name": "Pull #", "type": "autoNumber", "description": "The pull's number. One row per form submission."},
     {"name": "Requester Email", "type": "email", "description": "Gets the confirmation, short-stock, return-day, and overdue emails."},
     {"name": "Reason", "type": "singleSelect", "options": {"choices": [{"name": r} for r in REASONS]}},
+    {"name": "Description", "type": "multilineText", "description": "Which shoot, client, or stylist this pull is for — e.g. 'Zoe Kravitz shoot, Oct 3'. Searchable."},
     {"name": "Expected Return Date", "type": "date", "options": {"dateFormat": {"name": "iso"}}},
     *[{"name": f"Qty {n}", "type": "singleSelect", "options": {"choices": [{"name": q} for q in QTY_OPTIONS]},
        "description": f"Quantity for Item {n}."} for n in range(1, SLOTS + 1)],
@@ -518,6 +520,7 @@ def fan_out(orders: Airtable, lines: Airtable, inventory: Airtable) -> list[str]
                     "Request": f"{stock.get('Item', '?')} / {f.get('Requester Email', '?')}"[:250],
                     "Order": [oid], "Item": [item[0]], "Quantity": str(q),
                     "Requester Email": f.get("Requester Email"), "Reason": f.get("Reason"),
+                    "Description": f.get("Description"),
                     "Expected Return Date": f.get("Expected Return Date"),
                     "Status": "Requested" if ok else "Insufficient stock",
                     "Worker Log": f"{_now()} created from pull #{f.get('Pull #')}"

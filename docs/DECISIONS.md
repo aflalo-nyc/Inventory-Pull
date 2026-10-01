@@ -144,3 +144,16 @@ releases Return accepted / writes off Write-off → Closed.
 Approved, one Denied, one Insufficient stock can all live on the same pull. Only approved
 items are reserved; a "Yes" on the return form only flips items that were actually out
 (Reserved); the pull reads Closed only when every item is closed by whatever path.
+
+## 2026-09-30: our own forms, a Description, and a nudge for approvers
+
+- **Forms are ours** (`aflalo_pulls/web.py`): Airtable's builder can't do several items with
+  quantities. The request form (search picker per item, live count, add-a-row up to 5) writes
+  Pull Orders; the return form at `/return/<pull>` writes Pull Returns. Passcode + company
+  email domain. Same process runs the worker every 5 minutes → Railway is one web service.
+- **Description** ("what is it for": shoot / client / stylist) is required on the form, stored
+  on the pull, copied to every item row so Pull Requests is searchable by it, and leads the
+  approver email subject.
+- **Returns waiting on you** — 9:10am ET daily email to Sarena + Lillian listing items at
+  Return submitted that nobody has accepted; repeats until the list is empty.
+- Only ACTIVE Shopify products are pullable (team, 2026-09-30); unlisted/draft are not.

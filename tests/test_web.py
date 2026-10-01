@@ -8,7 +8,8 @@ KNOWN = {"recA", "recB"}
 
 
 def _req(**over):
-    base = {"passcode": "", "email": "ava@aflalonyc.com", "reason": "Photoshoot", "return_date": "2026-10-10",
+    base = {"passcode": "", "email": "ava@aflalonyc.com", "reason": "Photoshoot", "description": "Zoe Kravitz shoot, Oct 3",
+            "return_date": "2026-10-10",
             "item1": "recA", "qty1": "2", "item2": "recB", "qty2": "1"}
     base.update(over)
     return base
@@ -20,12 +21,14 @@ def test_a_good_request_becomes_one_pull_orders_row_with_compacted_slots():
     assert fields["Item 2"] == ["recA"] and fields["Qty 2"] == "3"
     assert "Item 3" not in fields
     assert fields["Requester Email"] == "ava@aflalonyc.com" and fields["Reason"] == "Photoshoot"
+    assert fields["Description"] == "Zoe Kravitz shoot, Oct 3"
 
 
 @pytest.mark.parametrize("bad, msg", [
     (dict(email="ava@gmail.com"), "@aflalonyc.com"),
     (dict(reason="Because"), "reason"),
     (dict(return_date=""), "return date"),
+    (dict(description=""), "which shoot"),
     (dict(item1="recZZZ"), "pick it from the list"),
     (dict(qty1="9"), "quantity"),
     (dict(item2="recA"), "same piece"),

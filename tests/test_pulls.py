@@ -82,14 +82,14 @@ def _line(rid, status, item="invMira", qty="1", **extra):
 def test_a_two_item_form_becomes_two_lines_sharing_one_pull():
     orders = FakeTable([{"id": "ord1", "fields": {
         "Pull #": 7, "Requester Email": "jordyn@aflalonyc.com", "Reason": "Photoshoot",
-        "Expected Return Date": "2026-09-20",
+        "Description": "Vogue shoot", "Expected Return Date": "2026-09-20",
         "Item 1": ["invMira"], "Qty 1": "2", "Item 2": ["invGide"], "Qty 2": "1"}}])
     lines = FakeTable()
     log = worker.fan_out(orders, lines, _inv())
     assert len(lines.created) == 2
     for l in lines.created:
         f = l["fields"]
-        assert f["Order"] == ["ord1"] and f["Reason"] == "Photoshoot"
+        assert f["Order"] == ["ord1"] and f["Reason"] == "Photoshoot" and f["Description"] == "Vogue shoot"
         assert f["Expected Return Date"] == "2026-09-20" and f["Status"] == "Requested"
     assert {l["fields"]["Quantity"] for l in lines.created} == {"2", "1"}
     assert orders.records["ord1"]["fields"]["Lines created"] is True
