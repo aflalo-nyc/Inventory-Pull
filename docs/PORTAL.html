@@ -242,7 +242,7 @@ td code{white-space:nowrap}
 <div class="tablewrap"><table>
 <tr><th>Piece</th><th>What it is</th><th>Where</th></tr>
 <tr><td><strong>Portal service</strong></td><td>One Python process. Serves the two forms and runs the worker on a five-minute timer in the same process. Health check at <code>/health</code>.</td><td>Railway, project <code>aflalo-inventory-pulls</code>, service <code>portal</code>, workspace AFLALO Projects</td></tr>
-<tr><td><strong>Code</strong></td><td>Plain Python 3.12, standard library only (no framework). Tests fake Shopify and Airtable.</td><td>GitHub <code>aflalo-nyc/Inventory-Pull</code>, branch main. Every push to main redeploys automatically.</td></tr>
+<tr><td><strong>Code</strong></td><td>Plain Python 3.12, standard library only (no framework). Tests fake Shopify and Airtable.</td><td>GitHub <code>aflalo-nyc/Inventory-Pull</code>, branch main. Pushes do not deploy on their own, see the note under Handoff.</td></tr>
 <tr><td><strong>Shopify app</strong></td><td>The portal's own app, <code>inventory-portal</code>, with only the scopes it needs: write and read inventory, read products, read locations, read draft orders. The CS agent's app is separate and has no write access.</td><td>Shopify Dev Dashboard, store aflalo.myshopify.com</td></tr>
 <tr><td><strong>Airtable base</strong></td><td>The four tables above plus nine automations that send every email.</td><td><code>appTrtbXNlwlgzfcG</code></td></tr>
 </table></div>
@@ -288,6 +288,13 @@ docs/SCOPING.md                    the Shopify API feasibility check, with evide
 <tr><td>Shopify app</td><td><code>inventory-portal</code> on aflalo.myshopify.com</td></tr>
 </table></div>
 
+<h3>Changing the code</h3>
+<div class="callout warn">
+<p><strong>A push to GitHub does not deploy by itself.</strong> Railway runs a snapshot of the code taken at its last build, so the live site keeps running unchanged until a new build is started. This was observed on Sep 30: a docs commit reached GitHub main but Railway never built it. The likely cause is that the GitHub account doing the pushing isn't linked to Railway.</p>
+<p>After any commit and push that should go live, kick a build by hand: Railway → <code>aflalo-inventory-pulls</code> → <code>portal</code> → <strong>Deploy</strong> (or Deployments → Redeploy latest commit). Watch the deploy log for the lines <code>portal forms on …</code> and <code>worker: every 5 min, LIVE</code>, then open <code>/health</code>. To make pushes deploy automatically again, open the service's Settings → Source and reconnect the GitHub repo with the account that owns the Railway project.</p>
+<p>If you never change the code, none of this matters. The site stays up and the worker keeps running on the current build.</p>
+</div>
+
 <h3>The nine automations (Airtable, Automations tab)</h3>
 <div class="tablewrap"><table>
 <tr><th>Email</th><th>When</th><th>To</th></tr>
@@ -308,7 +315,7 @@ docs/SCOPING.md                    the Shopify API feasibility check, with evide
 <tr><th>You want to</th><th>Do this</th></tr>
 <tr><td>Pause all inventory moves</td><td>Railway → portal → Variables → remove <code>WORKER_LIVE</code>. The forms keep working, the worker goes to dry run. Set it back to 1 to resume.</td></tr>
 <tr><td>Change the passcode</td><td>Set a new <code>PORTAL_PASSCODE</code> on Railway. It applies on the redeploy a minute later. Update the local .env and this page.</td></tr>
-<tr><td>Add a reason</td><td>Edit the <code>REASONS</code> list at the top of <code>worker.py</code> and push. Adding the option in Airtable alone isn't enough, the form validates against the code's list.</td></tr>
+<tr><td>Add a reason</td><td>Edit the <code>REASONS</code> list at the top of <code>worker.py</code>, push, then kick a build (see Changing the code). Adding the option in Airtable alone isn't enough, the form validates against the code's list.</td></tr>
 <tr><td>Change approvers</td><td>Edit the To field on the automations above. The code doesn't know who approves.</td></tr>
 <tr><td>Pull from a different location</td><td>Set <code>PORTAL_LOCATION_NAME</code> to the exact Shopify location name.</td></tr>
 <tr><td>Move the site</td><td>Set <code>PORTAL_URL</code>, then run <code>worker --return-form-url &lt;new url&gt;</code> once so existing pulls' return links follow.</td></tr>
