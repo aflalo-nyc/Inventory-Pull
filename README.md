@@ -1,5 +1,7 @@
 # AFLALO Inventory Pulls
 
+**Current state and what's left: [STATUS.md](STATUS.md)**
+
 Internal inventory pull requests, without draft orders. A requester fills one Airtable form
 (up to five items, each with its own quantity); Sarena or Lillian approve or deny each item;
 approved units are reserved in Shopify so the website can't sell them while they're out;
