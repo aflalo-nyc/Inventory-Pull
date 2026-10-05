@@ -13,6 +13,7 @@ Last checked: 2026-10-05
 | Emails | All 9 Airtable automations deployed and valid (base `appTrtbXNlwlgzfcG`) |
 | Tests | 27 pass |
 | Real use | **None.** Pull Orders and Pull Requests are both empty. |
+| Old process | **Still in daily use.** 25 open Shopify draft orders hold pulled stock (46 items in the reserved bucket). 2 were created after the portal went live, and most hold their stock for a full year. |
 
 The supervised test in `docs/TESTING.md` was run on the 2026-09-14 version, which used Airtable's own
 form. The current version (our own form, deployed 2026-09-30) has never had a pull go through it end
@@ -32,9 +33,13 @@ since.
    - the return form link in the requester's email opens that pull
    - Return accepted → the unit is back on sale
 2. **Announce it.** Post the form link and passcode to the team in Slack.
-3. **Decide when draft-order pulls stop.** The plan was to run both side by side at first
-   (`docs/DECISIONS.md`, decision 11). `python -m aflalo_pulls.worker --draft-audit` lists the draft
-   orders still open from the old process, so Lillian can close them out.
+3. **Set a cutover date for draft-order pulls.** The plan was to run both side by side at first
+   (`docs/DECISIONS.md`, decision 11), but nothing moves people over. Pick the date after which new
+   pulls only go through the portal.
+4. **Close out the 25 open draft orders.** Pieces that are back: delete the draft so the stock goes
+   back on sale. Pieces still out: re-enter them as portal pulls so they get return reminders.
+   `python -m aflalo_pulls.worker --draft-audit` lists them, as does Shopify admin → Orders →
+   Drafts → Open.
 
 ## Open, not blocking
 
